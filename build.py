@@ -164,7 +164,7 @@ def main():
     elif args.platform and args.arch:
         platform_name = args.platform
         arch = args.arch
-        success = build_executable(args.platform, args.arch)
+        success = build_executable(platform_name, arch)
         
     else:
         parser.print_help()
