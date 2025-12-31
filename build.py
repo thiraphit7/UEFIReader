@@ -135,6 +135,10 @@ def main():
     if args.clean:
         clean_build_artifacts()
     
+    # Initialize variables
+    platform_name = None
+    arch = None
+    
     # Determine what to build
     if args.all:
         # Build for current platform
@@ -158,6 +162,8 @@ def main():
         success = build_executable(platform_name, arch)
         
     elif args.platform and args.arch:
+        platform_name = args.platform
+        arch = args.arch
         success = build_executable(args.platform, args.arch)
         
     else:
