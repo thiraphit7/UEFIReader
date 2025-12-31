@@ -70,7 +70,7 @@ def build_executable(platform_name, arch):
     print(f"Running: {' '.join(cmd)}")
     try:
         result = subprocess.run(cmd, check=True)
-        print(f"\n✓ Successfully built for {platform_name} {arch}")
+        print(f"\n[OK] Successfully built for {platform_name} {arch}")
         
         # Show output location
         output_dir = f'dist/{platform_name}_{arch}'
@@ -85,7 +85,7 @@ def build_executable(platform_name, arch):
         return True
         
     except subprocess.CalledProcessError as e:
-        print(f"\n✗ Failed to build for {platform_name} {arch}")
+        print(f"\n[FAILED] Failed to build for {platform_name} {arch}")
         print(f"  Error: {e}")
         return False
 
