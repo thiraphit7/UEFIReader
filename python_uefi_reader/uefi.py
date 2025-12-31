@@ -218,7 +218,7 @@ class UEFI:
                 )
                 
                 inf_path = os.path.join(combined_path, f"{module_name}.inf")
-                with open(inf_path, 'w') as f:
+                with open(inf_path, 'w', encoding='utf-8') as f:
                     f.write(inf_output)
                 
                 rel_path = os.path.join(output_path, f"{module_name}.inf").replace('\\', '/')
@@ -273,10 +273,10 @@ class UEFI:
                             f.write(section.decompressed_image)
         
         # Write output files
-        with open(os.path.join(output, 'DXE.dsc.inc'), 'w') as f:
+        with open(os.path.join(output, 'DXE.dsc.inc'), 'w', encoding='utf-8') as f:
             f.write('\n'.join(dxe_include_list))
         
-        with open(os.path.join(output, 'DXE.inc'), 'w') as f:
+        with open(os.path.join(output, 'DXE.inc'), 'w', encoding='utf-8') as f:
             f.write('\n'.join(dxe_load_list))
     
     def _extract_apriori(self, output: str):
@@ -313,7 +313,7 @@ class UEFI:
         
         apriori_load_list.append("}")
         
-        with open(os.path.join(output, 'APRIORI.inc'), 'w') as f:
+        with open(os.path.join(output, 'APRIORI.inc'), 'w', encoding='utf-8') as f:
             f.write('\n'.join(apriori_load_list))
     
     def _handle_volume_image(self, data: bytes, offset: int) -> List[EFI]:
