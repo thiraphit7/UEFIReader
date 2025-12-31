@@ -83,9 +83,6 @@ jobs:
       - name: Build executable
         run: python build.py --platform windows --arch x64
       
-      - name: Test executable
-        run: dist\windows_x64\uefireader.exe || echo "No input provided"
-      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -115,7 +112,6 @@ jobs:
         with:
           name: uefireader-windows-x86
           path: dist/windows_x86/uefireader.exe
-
   create-release:
     name: Create Release
     needs: [build-linux-x64, build-linux-arm64, build-windows-x64, build-windows-x86]
@@ -126,6 +122,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: uploadall
+        uses: actions/upload-artifact@v4
+        with:
+          name: all
+          path: artifacts/*
+      
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
