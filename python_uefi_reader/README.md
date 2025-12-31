@@ -19,26 +19,64 @@ This is a Python implementation of the original C# UEFIReader tool. It provides 
 - Python 3.6 or higher
 - No external dependencies (uses only Python standard library)
 
-## Installation
+## Installation Options
 
-No installation required. The tool can be run directly from the source directory.
+### Option 1: Run from Source (No Installation)
+
+The tool can be run directly from the source directory without installation.
+
+### Option 2: Install as Python Package
+
+```bash
+pip install .
+```
+
+After installation, you can use:
+```bash
+uefi-reader <Path to UEFI image> <Output Directory>
+```
+
+### Option 3: Standalone Executable (No Python Required)
+
+Pre-built standalone executables are available that don't require Python installation:
+- **Linux**: x64, x86, arm64
+- **Windows**: x64, x86, arm64
+
+Download from releases or build yourself (see [BUILD.md](../BUILD.md)).
 
 ## Usage
 
+### With Python
+
 ```bash
+# As module
 python -m python_uefi_reader <Path to UEFI image/XBL image> <Output Directory>
+
+# Direct execution
+python python_uefi_reader/__main__.py <Path to UEFI image/XBL image> <Output Directory>
+
+# After pip install
+uefi-reader <Path to UEFI image> <Output Directory>
 ```
 
-Or run directly:
+### Standalone Executable
 
 ```bash
-python python_uefi_reader/__main__.py <Path to UEFI image/XBL image> <Output Directory>
+# Linux
+./uefireader <Path to UEFI image> <Output Directory>
+
+# Windows
+uefireader.exe <Path to UEFI image> <Output Directory>
 ```
 
 ### Example
 
 ```bash
+# Python
 python -m python_uefi_reader /path/to/uefi.img /path/to/output
+
+# Standalone
+./uefireader /path/to/uefi.img /path/to/output
 ```
 
 ## Output

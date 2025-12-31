@@ -12,6 +12,7 @@ This repository contains two implementations of UEFIReader:
 2. **Python Implementation** - Located in `python_uefi_reader/` directory
    - Requires Python 3.6 or higher
    - No external dependencies (uses Python standard library)
+   - **Standalone executables available** (no Python installation required)
    - See [Python README](python_uefi_reader/README.md) for details
 
 ## Usage
@@ -21,10 +22,42 @@ This repository contains two implementations of UEFIReader:
 dotnet run --project UEFIReader/UEFIReader.csproj <UEFI image path> <Output directory>
 ```
 
-### Python Version
+### Python Version (from source)
 ```bash
 python -m python_uefi_reader <UEFI image path> <Output directory>
 ```
+
+### Standalone Executable (no Python required)
+```bash
+# Linux
+./uefireader <UEFI image path> <Output directory>
+
+# Windows
+uefireader.exe <UEFI image path> <Output directory>
+```
+
+See [BUILD.md](BUILD.md) for instructions on building standalone executables.
+
+## Building Standalone Executables
+
+The Python version can be compiled into standalone executables for:
+- **Linux**: x64, x86, arm64
+- **Windows**: x64, x86, arm64
+
+### Quick Build
+
+Linux:
+```bash
+chmod +x build_linux.sh
+./build_linux.sh
+```
+
+Windows:
+```cmd
+build_windows.bat
+```
+
+See [BUILD.md](BUILD.md) for detailed build instructions.
 
 ## License
 

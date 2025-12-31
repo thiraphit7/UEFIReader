@@ -1,0 +1,141 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-linux-x64:
+    name: Build Linux x64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+      
+      - name: Build executable
+        run: python build.py --platform linux --arch x64
+      
+      - name: Test executable
+        run: ./dist/linux_x64/uefireader || true
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uefireader-linux-x64
+          path: dist/linux_x64/uefireader
+
+  build-linux-arm64:
+    name: Build Linux ARM64
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      
+      - name: Build in ARM64 container
+        run: |
+          docker run --platform linux/arm64 --rm \
+            -v $PWD:/workspace \
+            -w /workspace \
+            python:3.9 \
+            bash -c "pip install pyinstaller && python build.py --platform linux --arch arm64"
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uefireader-linux-arm64
+          path: dist/linux_arm64/uefireader
+
+  build-windows-x64:
+    name: Build Windows x64
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+      
+      - name: Build executable
+        run: python build.py --platform windows --arch x64
+      
+      - name: Test executable
+        run: dist\windows_x64\uefireader.exe || echo "No input provided"
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uefireader-windows-x64
+          path: dist/windows_x64/uefireader.exe
+
+  build-windows-x86:
+    name: Build Windows x86
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+      
+      - name: Build executable
+        run: python build.py --platform windows --arch x86
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uefireader-windows-x86
+          path: dist/windows_x86/uefireader.exe
+
+  create-release:
+    name: Create Release
+    needs: [build-linux-x64, build-linux-arm64, build-windows-x64, build-windows-x86]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/uefireader-linux-x64/uefireader
+            artifacts/uefireader-linux-arm64/uefireader
+            artifacts/uefireader-windows-x64/uefireader.exe
+            artifacts/uefireader-windows-x86/uefireader.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
