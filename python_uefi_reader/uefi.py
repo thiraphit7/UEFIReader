@@ -199,11 +199,17 @@ class UEFI:
                         extension = 'depex'
                     
                     output_file_name = f"{module_name}.{extension}"
-                    inf_output += f"\n   {section_type}|{output_file_name}|*"
-                    
                     file_path = os.path.join(combined_path, output_file_name)
+                    
+                    # Handle file conflicts by adding numeric suffix
                     if os.path.exists(file_path):
-                        raise Exception("File Conflict Detected")
+                        counter = 1
+                        while os.path.exists(file_path):
+                            output_file_name = f"{module_name}_{counter}.{extension}"
+                            file_path = os.path.join(combined_path, output_file_name)
+                            counter += 1
+                    
+                    inf_output += f"\n   {section_type}|{output_file_name}|*"
                     
                     with open(file_path, 'wb') as f:
                         f.write(item.decompressed_image)
