@@ -55,11 +55,6 @@ class UEFI:
         self.load_priority: set = set()
         self.build_id: str = ""
         self.verbose = verbose
-    
-    def _log(self, message: str):
-        """Log debug message if verbose mode is enabled."""
-        if self.verbose:
-            print(message, file=sys.stderr)
         
         # Find UEFI volume header
         offset = byte_operations.find_ascii(uefi_binary, "_FVH")
@@ -75,6 +70,11 @@ class UEFI:
         build_ids = self._try_get_build_path(uefi_binary)
         if len(build_ids) > 0:
             self.build_id = build_ids[0]
+    
+    def _log(self, message: str):
+        """Log debug message if verbose mode is enabled."""
+        if self.verbose:
+            print(message, file=sys.stderr)
     
     def extract_uefi(self, output: str):
         """Extract UEFI to output directory."""
