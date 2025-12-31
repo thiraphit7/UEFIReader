@@ -43,4 +43,3 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: ./publish/win-x64/UEFIReader.exe
-        name: UEFIReader-win-x64.exe
