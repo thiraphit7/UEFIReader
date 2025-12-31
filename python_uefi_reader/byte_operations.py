@@ -77,7 +77,7 @@ def read_guid(byte_array: bytes, offset: int) -> uuid.UUID:
 
 def write_uint16(byte_array: bytearray, offset: int, value: int) -> None:
     """Write 16-bit unsigned integer (little-endian)."""
-    struct.pack_into('<H', byte_array, offset, value)
+    byte_array[offset:offset + 2] = struct.pack('<H', value)
 
 
 def align(base: int, offset: int, alignment: int) -> int:

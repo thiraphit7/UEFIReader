@@ -3,10 +3,16 @@
 Setup script for UEFIReader Python implementation.
 """
 
+import os
 from setuptools import setup, find_packages
 
-with open('python_uefi_reader/README.md', 'r', encoding='utf-8') as f:
-    long_description = f.read()
+# Read README from the correct location
+readme_path = os.path.join(os.path.dirname(__file__), 'python_uefi_reader', 'README.md')
+try:
+    with open(readme_path, 'r', encoding='utf-8') as f:
+        long_description = f.read()
+except FileNotFoundError:
+    long_description = 'Tool to generate .inf payloads for UEFI projects from UEFI volumes'
 
 setup(
     name='uefi-reader',

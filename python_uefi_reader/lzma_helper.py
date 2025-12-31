@@ -66,7 +66,9 @@ def decompress(data: bytes, offset: int, input_size: int) -> bytes:
                 }
             ]
             decompressor = lzma.LZMADecompressor(format=lzma.FORMAT_RAW, filters=filters)
-            return decompressor.decompress(compressed_data, max_length=output_size)
+            result = decompressor.decompress(compressed_data)
+            # Truncate to expected output size if necessary
+            return result[:output_size] if len(result) > output_size else result
 
 
 def compress(data: bytes, offset: int, input_size: int) -> bytes:

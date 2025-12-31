@@ -22,6 +22,7 @@ DEALINGS IN THE SOFTWARE.
 
 import os
 import re
+import sys
 import uuid
 from datetime import datetime
 from typing import List, Tuple, Optional
@@ -49,10 +50,16 @@ class EFI:
 class UEFI:
     """Main UEFI parser class."""
     
-    def __init__(self, uefi_binary: bytes):
+    def __init__(self, uefi_binary: bytes, verbose: bool = True):
         self.efis: List[EFI] = []
         self.load_priority: set = set()
         self.build_id: str = ""
+        self.verbose = verbose
+    
+    def _log(self, message: str):
+        """Log debug message if verbose mode is enabled."""
+        if self.verbose:
+            print(message, file=sys.stderr)
         
         # Find UEFI volume header
         offset = byte_operations.find_ascii(uefi_binary, "_FVH")
@@ -243,7 +250,7 @@ class UEFI:
                         with open(file_dst, 'wb') as f:
                             f.write(section.decompressed_image)
                         
-                        dxe_load_list.append(f"    SECTION {section.type} = RawFiles/{file_name.replace(' ', '_').replace(chr(92), '/')}")
+                        dxe_load_list.append(f"    SECTION {section.type} = RawFiles/{file_name.replace(' ', '_').replace(os.sep, '/')}")
                     elif section.type == 'UI':
                         dxe_load_list.append(f'    SECTION {section.type} = "{el}"')
                 
@@ -325,7 +332,8 @@ class UEFI:
         buffer = data[file_header_offset:file_header_offset + volume_size - volume_header_size]
         
         if file_header_offset + len(buffer) > len(data):
-            print(f"Warning: Input buffer is too small by {(file_header_offset + len(buffer)) - len(data):08X} bytes.")
+            if self.verbose:
+                print(f"Warning: Input buffer is too small by {(file_header_offset + len(buffer)) - len(data):08X} bytes.", file=sys.stderr)
         
         return self._handle_file_loop(buffer, 0, file_header_offset)
     
@@ -347,7 +355,7 @@ class UEFI:
             
             # Process different file types
             if file_type == 0x01:  # EFI_FV_FILETYPE_RAW
-                print("EFI_FV_FILETYPE_RAW")
+                self._log("EFI_FV_FILETYPE_RAW")
                 buffer = data[offset + file_header_size:offset + file_size]
                 efi = EFI()
                 efi.type = 'RAW'
@@ -361,17 +369,17 @@ class UEFI:
             
             elif file_type == 0x02:  # EFI_FV_FILETYPE_FREEFORM
                 if file_guid == uuid.UUID('fc510ee7-ffdc-11d4-bd41-0080c73c8881'):
-                    print("EFI_FV_FILETYPE_DXE_APRIORI")
+                    self._log("EFI_FV_FILETYPE_DXE_APRIORI")
                     buffer = data[offset + file_header_size:offset + file_size]
                     elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                     
                     if len(elements) > 0 and elements[0].type == 'RAW':
                         for i in range(0, len(elements[0].decompressed_image), 16):
                             dependency_guid = byte_operations.read_guid(elements[0].decompressed_image, i)
-                            print(str(dependency_guid).upper())
+                            self._log(str(dependency_guid).upper())
                             self.load_priority.add(dependency_guid)
                 else:
-                    print("EFI_FV_FILETYPE_FREEFORM")
+                    self._log("EFI_FV_FILETYPE_FREEFORM")
                     buffer = data[offset + file_header_size:offset + file_size]
                     elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                     efi = EFI()
@@ -381,7 +389,7 @@ class UEFI:
                     file_elements.append(efi)
             
             elif file_type == 0x03:  # EFI_FV_FILETYPE_SECURITY_CORE
-                print("EFI_FV_FILETYPE_SECURITY_CORE")
+                self._log("EFI_FV_FILETYPE_SECURITY_CORE")
                 buffer = data[offset + file_header_size:offset + file_size]
                 elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                 efi = EFI()
@@ -391,7 +399,7 @@ class UEFI:
                 file_elements.append(efi)
             
             elif file_type == 0x05:  # EFI_FV_FILETYPE_DXE_CORE
-                print("EFI_FV_FILETYPE_DXE_CORE")
+                self._log("EFI_FV_FILETYPE_DXE_CORE")
                 buffer = data[offset + file_header_size:offset + file_size]
                 elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                 efi = EFI()
@@ -401,7 +409,7 @@ class UEFI:
                 file_elements.append(efi)
             
             elif file_type == 0x07:  # EFI_FV_FILETYPE_DRIVER
-                print("EFI_FV_FILETYPE_DRIVER")
+                self._log("EFI_FV_FILETYPE_DRIVER")
                 buffer = data[offset + file_header_size:offset + file_size]
                 elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                 efi = EFI()
@@ -411,7 +419,7 @@ class UEFI:
                 file_elements.append(efi)
             
             elif file_type == 0x09:  # EFI_FV_FILETYPE_APPLICATION
-                print("EFI_FV_FILETYPE_APPLICATION")
+                self._log("EFI_FV_FILETYPE_APPLICATION")
                 buffer = data[offset + file_header_size:offset + file_size]
                 elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                 efi = EFI()
@@ -421,7 +429,7 @@ class UEFI:
                 file_elements.append(efi)
             
             elif file_type == 0x0B:  # EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE
-                print("EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE")
+                self._log("EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE")
                 buffer = data[offset + file_header_size:offset + file_size]
                 elements = self._handle_section_loop(buffer, 0, offset + file_header_size)
                 for element in elements:
@@ -429,13 +437,13 @@ class UEFI:
                         file_elements.extend(self._handle_volume_image(element.decompressed_image, 0))
             
             elif file_type == 0xF0:  # EFI_FV_FILETYPE_FFS_PAD
-                print("EFI_FV_FILETYPE_FFS_PAD")
+                self._log("EFI_FV_FILETYPE_FFS_PAD")
             
             elif file_type in [0x00, 0xFF]:
                 return file_elements
             
             else:
-                print(f"Unsupported file type! 0x{file_type:02X} with size 0x{file_size:04X} at offset 0x{offset:04X}")
+                self._log(f"Unsupported file type! 0x{file_type:02X} with size 0x{file_size:04X} at offset 0x{offset:04X}")
                 raise ValueError("Unsupported file type")
             
             offset += file_size
@@ -462,42 +470,42 @@ class UEFI:
                 raise ValueError("Invalid section size")
             
             if section_type == 0x02:  # EFI_SECTION_GUID_DEFINED
-                print("EFI_SECTION_GUID_DEFINED")
+                self._log("EFI_SECTION_GUID_DEFINED")
                 file_elements.extend(self._parse_guid_defined_section(data, offset, base))
             
             elif section_type == 0x10:  # EFI_SECTION_PE32
-                print("EFI_SECTION_PE32")
+                self._log("EFI_SECTION_PE32")
                 section = EFISection()
                 section.type = 'PE32'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x11:  # EFI_SECTION_PIC
-                print("EFI_SECTION_PIC")
+                self._log("EFI_SECTION_PIC")
                 section = EFISection()
                 section.type = 'PIC'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x12:  # EFI_SECTION_TE
-                print("EFI_SECTION_TE")
+                self._log("EFI_SECTION_TE")
                 section = EFISection()
                 section.type = 'TE'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x13:  # EFI_SECTION_DXE_DEPEX
-                print("EFI_SECTION_DXE_DEPEX")
+                self._log("EFI_SECTION_DXE_DEPEX")
                 section = EFISection()
                 section.type = 'DXE_DEPEX'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x14:  # EFI_SECTION_VERSION
-                print("EFI_SECTION_VERSION")
+                self._log("EFI_SECTION_VERSION")
             
             elif section_type == 0x15:  # EFI_SECTION_USER_INTERFACE
-                print("EFI_SECTION_USER_INTERFACE")
+                self._log("EFI_SECTION_USER_INTERFACE")
                 section = EFISection()
                 section.type = 'UI'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
@@ -505,28 +513,28 @@ class UEFI:
                 file_elements.append(section)
             
             elif section_type == 0x17:  # EFI_SECTION_FIRMWARE_VOLUME_IMAGE
-                print("EFI_SECTION_FIRMWARE_VOLUME_IMAGE")
+                self._log("EFI_SECTION_FIRMWARE_VOLUME_IMAGE")
                 section = EFISection()
                 section.type = 'FV'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x18:  # EFI_SECTION_FREEFORM_SUBTYPE_GUID
-                print("EFI_SECTION_FREEFORM_SUBTYPE_GUID")
+                self._log("EFI_SECTION_FREEFORM_SUBTYPE_GUID")
                 section = EFISection()
                 section.type = 'RAW'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x19:  # EFI_SECTION_RAW
-                print("EFI_SECTION_RAW")
+                self._log("EFI_SECTION_RAW")
                 section = EFISection()
                 section.type = 'RAW'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
                 file_elements.append(section)
             
             elif section_type == 0x1B:  # EFI_SECTION_PEI_DEPEX
-                print("EFI_SECTION_PEI_DEPEX")
+                self._log("EFI_SECTION_PEI_DEPEX")
                 section = EFISection()
                 section.type = 'PEI_DEPEX'
                 section.decompressed_image = self._read_section_data_buffer(data, offset)
@@ -536,7 +544,7 @@ class UEFI:
                 return file_elements
             
             else:
-                print(f"Unsupported section type! 0x{section_type:02X} with size 0x{section_size:04X} at offset 0x{offset:04X}")
+                self._log(f"Unsupported section type! 0x{section_type:02X} with size 0x{section_size:04X} at offset 0x{offset:04X}")
                 raise ValueError("Unsupported section type")
             
             offset += section_size
